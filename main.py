@@ -1,35 +1,39 @@
-import asyncio
 import random
-
-import requests
-import time
+import scripts
 
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import ContentType, ParseMode, ChatActions
 
-from scripts import *
+from replics import Replic
+from keyboard import *
 
-API_TOKEN = '6096985077:AAHp8wmQTOpz5GiizYnW2R5fuKORCtUuUGM'
+bot_token = scripts.get_api_token()
 
-bot = Bot(token=API_TOKEN)
+bot = Bot(token=bot_token)
 dp = Dispatcher(bot)
+
+rep = Replic()
 
 user_dict = {"in_game": False, "attempts": 0, "number": 0}
 
 
 @dp.message_handler(commands=['help'])
 async def process_help_command(message: types.Message):
-    await message.reply(
-        "Это тестовый бот! Сейчас есть следующие команды:\n/help - информация о всех командах\n/start - перезапуск бота\n/photo - отправка рандомного кота\n/game - начать игру\n/cancel - закончить игру")
+    await message.reply(text=rep.get_helping(), reply_markup=comm_kb)
 
 
 @dp.message_handler(commands=['start'])
 async def process_start_command(message: types.Message):
-    if user_dict["in_game"] == True:
+    if user_dict["in_game"]:
         await message.answer(f"Я хотел поиграть...")
-    elif user_dict["in_game"] == False:
+    elif not user_dict["in_game"]:
         first_name = message.from_user.first_name
-        await message.reply(f"Привет, {first_name}!")
+        await message.reply(rep.get_starting(first_name))
+
+
+# @dp.message_handler(commands=['keyboard'])
+# async def process_start_command(message: types.Message):
+#     await message.answer(f"Привет, такая получилась клавиатура!", reply_markup=game_keyboard)
 
 
 # @dp.message_handler(commands=['file'])
@@ -43,16 +47,16 @@ async def process_start_command(message: types.Message):
 
 @dp.message_handler(commands=['photo'])
 async def process_photo_command(message: types.Message):
-    if user_dict["in_game"] == True:
+    if user_dict["in_game"]:
         await message.answer(f"Мы играем, не отвлекайся!")
     else:
         user_id = message.from_user.id
         await bot.send_chat_action(user_id, ChatActions.UPLOAD_PHOTO)
-        file = get_cat_picture()
+        file = scripts.get_cat_picture()
         capt = "Ура коты!!!"
         first_name = message.from_user.first_name
         if first_name == "spetan":
-            file = get_bear_picture()
+            file = scripts.get_bear_picture()
             captions = ["дааа, медведи", "ну такие нормальные ребята",
                         "еще есть пиздючело 1,5 метра,\nну там такой, отдыхающий, но с припиздоном",
                         "ебать гризли самый быстрый 56км в час", "сука имбалансные существа",
@@ -63,29 +67,28 @@ async def process_photo_command(message: types.Message):
 
 @dp.message_handler(commands=['game'])
 async def process_start_command(message: types.Message):
-    if user_dict["in_game"] == True:
+    if user_dict["in_game"]:
         await message.answer(f"Мы уже играем, разве нет?")
     else:
         first_name = message.from_user.first_name
-        if user_dict["in_game"] == False:
+        if not user_dict["in_game"]:
             user_dict["in_game"] = True
-            user_dict["number"] = get_random_num()
-            await message.reply(
-                f"Ну что, {first_name}, готов сыграть в игру?\nПравила просты: я загадываю число от 1 до 100 и у тебя есть сколько-то попыток его угадать (напиши сколько хочешь, но не больше 10! 🥰). Если устанешь играть, то просто напиши /cancel ")
+            user_dict["number"] = scripts.get_random_num()
+            await message.reply(text=rep.get_gaming(first_name), reply_markup=game_kb)
 
 
 @dp.message_handler(commands=['cancel'])
 async def process_start_command(message: types.Message):
-    if user_dict["in_game"] == False:
-        await message.reply(f"Мы вроде и не играли сейчас 😁")
-    elif user_dict["in_game"] == True:
+    if not user_dict["in_game"]:
+        await message.reply(rep.get_cancelling(user_dict["in_game"]))
+    elif user_dict["in_game"]:
         user_dict["in_game"] = False
-        await message.reply(f"Поиграем в другой раз 😢")
+        await message.reply(rep.get_cancelling(user_dict["in_game"]))
 
 
 @dp.message_handler()
 async def echo(message: types.Message):
-    if user_dict["in_game"] == False:
+    if not user_dict["in_game"]:
         await message.answer("К сожалению, я не знаю такой команды.\nНапишите, пожалуйста /help !")
     elif user_dict["in_game"] == True and user_dict["attempts"] == 0:
         if int(message.text) <= 10:
@@ -119,7 +122,7 @@ async def echo(message: types.Message):
 
 @dp.message_handler(content_types=ContentType.STICKER)
 async def unknown_message(msg: types.Message):
-    if user_dict["in_game"] == True:
+    if user_dict["in_game"]:
         await msg.answer(f"Мы играем, не отвлекайся!")
     else:
         message_text = 'Классный стикер, но я не знаю, что с ним делать 🥲.\nНапишите, пожалуйста /help !'
@@ -128,7 +131,7 @@ async def unknown_message(msg: types.Message):
 
 @dp.message_handler(content_types=ContentType.ANY)
 async def unknown_message(msg: types.Message):
-    if user_dict["in_game"] == True:
+    if user_dict["in_game"]:
         await msg.answer(f"Мы играем, не отвлекайся!")
     else:
         message_text = 'Не знаю, что это.\nНапишите, пожалуйста /help !'

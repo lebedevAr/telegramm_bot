@@ -1,11 +1,6 @@
-from db_map import get_names
 import requests
 import random
-
-
-def to_db():
-    res = get_names("test.db")
-    print(res)
+from environs import Env
 
 
 def get_cat_picture():
@@ -27,6 +22,12 @@ def get_bear_picture():
         return name_responce.url
     except:
         return None
+
+
+def get_api_token():
+    env = Env()  # Создаем экземпляр класса Env
+    env.read_env()  # Методом read_env() читаем файл .env и загружаем из него переменные в окружение
+    return env('API_TOKEN')
 
 
 def get_random_num():
