@@ -31,20 +31,6 @@ async def process_start_command(message: types.Message):
         await message.reply(rep.get_starting(first_name))
 
 
-# @dp.message_handler(commands=['keyboard'])
-# async def process_start_command(message: types.Message):
-#     await message.answer(f"Привет, такая получилась клавиатура!", reply_markup=game_keyboard)
-
-
-# @dp.message_handler(commands=['file'])
-# async def process_file_command(message: types.Message):
-#     user_id = message.from_user.id
-#     await bot.send_chat_action(user_id, ChatActions.UPLOAD_DOCUMENT)
-#     file = r"C:\Users\artyo\Desktop\кур.docx"
-#     await asyncio.sleep(1)
-#     await bot.send_document(user_id, open(file, 'rb'), caption='Этот файл')
-
-
 @dp.message_handler(commands=['photo'])
 async def process_photo_command(message: types.Message):
     if user_dict["in_game"]:
@@ -54,14 +40,6 @@ async def process_photo_command(message: types.Message):
         await bot.send_chat_action(user_id, ChatActions.UPLOAD_PHOTO)
         file = scripts.get_cat_picture()
         capt = "Ура коты!!!"
-        first_name = message.from_user.first_name
-        if first_name == "spetan":
-            file = scripts.get_bear_picture()
-            captions = ["дааа, медведи", "ну такие нормальные ребята",
-                        "еще есть пиздючело 1,5 метра,\nну там такой, отдыхающий, но с припиздоном",
-                        "ебать гризли самый быстрый 56км в час", "сука имбалансные существа",
-                        "Они не умерли!\nТам просто только серые фотки..."]
-            capt = captions[random.randint(0, 5)]
         await bot.send_photo(user_id, file, reply_to_message_id=message.message_id, caption=capt)
 
 
